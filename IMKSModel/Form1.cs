@@ -294,6 +294,7 @@ namespace IMKSModel
                 
 
                 //  Рисуем для наглядности первый источник
+                /*
                 if (i == 0)
                 {
                     System.Drawing.Pen myPen;
@@ -308,7 +309,7 @@ namespace IMKSModel
                     myPen.Dispose();
                     formGraphics.Dispose();
                 }
-
+                */
 
 
 
@@ -361,6 +362,7 @@ namespace IMKSModel
 
 
                             //  Для наглядности рисуем канал
+                            /*
                             if (i == 0)
                             {
                                 System.Drawing.Pen myPen;
@@ -389,7 +391,7 @@ namespace IMKSModel
                                 myPen.Dispose();
                                 formGraphics.Dispose();
                             }
-
+                            */
 
                             
                             //  Проверяем попадание сигнала из текущего канала в какой-нибудь приёмник
@@ -527,7 +529,7 @@ namespace IMKSModel
         {
             Random rand = new Random();
 
-            int test = 4;
+            int test = 5;
 
             double breakPercent = 0.1;
             int channelToBreak;
@@ -686,15 +688,44 @@ namespace IMKSModel
             {
 
                 int k = 0;
-                double dz = 0;
-                for (int i = 0; i < 1000; i++)
+                double a = 0;
+                double x0, y0;
+                x0 = 1.5;
+                y0 = 1.5;
+
+                double drawK = 100;
+
+                while (a <= Math.PI*2)
                 {
                     //  Делаем коммутацию, считаем уровень засветки и выводим в Ексель
-                    Commutation(0, dz, k);
+                    Commutation(0, 0, k);
                     k++;
-                    dz = dz + 0.001;
+                    for (int j = 0; j < 8; j++)
+                    {
+
+                        sources[j].x = x0 + (sources[j].x - x0) * Math.Cos(0.01) - (sources[j].y - y0) * Math.Sin(0.01);
+                        sources[j].y = y0 + (sources[j].y - y0) * Math.Cos(0.01) + (sources[j].x - x0) * Math.Sin(0.01);
 
 
+                        if (j != 9)
+                        {
+
+                            System.Drawing.Pen myPen;
+                            myPen = new System.Drawing.Pen(System.Drawing.Color.Blue, 5);
+
+                            System.Drawing.Graphics formGraphics = this.CreateGraphics();
+                            Rectangle rect = new Rectangle(Convert.ToInt32((sources[j].x - sources[j].radius) * drawK),
+                                                            Convert.ToInt32((sources[j].y - sources[j].radius) * drawK),
+                                                            Convert.ToInt32(sources[j].radius * 2 * drawK),
+                                                            Convert.ToInt32(sources[j].radius * 2 * drawK));
+                            formGraphics.DrawEllipse(myPen, rect);
+                            myPen.Dispose();
+                            formGraphics.Dispose();
+                        }
+
+                    }
+
+                    a = a + 0.01;
                 }
 
             }
