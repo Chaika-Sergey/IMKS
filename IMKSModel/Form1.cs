@@ -270,7 +270,7 @@ namespace IMKSModel
         private void Commutation(double breakPercent, double dz, int ExcelCol)
         {
 
-            double d, intens, d_intens, d_zatyx, receiverIntens;
+            double d, intens, d_intens, intens_rcv, d_intens_rcv, d_zatyx, receiverIntens;
             int channelsInSourceCount, channelsInReceiver;
 
             int drawK = 1000;
@@ -282,14 +282,18 @@ namespace IMKSModel
 
             int ExcelRow = 1;
 
+
+            //  Перебираем все источники
             for (int i = 0; i < sourcesCount; i++)
             {
                 channelsInSourceCount = 0;
                 channelsInReceiver = 0;
                 intens = 0;
+                intens_rcv = 0;
                 receiverIntens = 0;
                 
 
+                //  Рисуем для наглядности первый источник
                 if (i == 0)
                 {
                     System.Drawing.Pen myPen;
@@ -308,62 +312,28 @@ namespace IMKSModel
 
 
 
-
+                //  Для каждого источника перебираем все каналы
+                //  и ищем среди них задействованные этим источником
                 for (int j = 0; j < channelsCount; j++)
                 {
+
+                    //  Если канал не сломан
                     if (channels[j].isOk)
                     {
 
+                        //  Считаем расстояние от середины источника до середины канала
                         d = Math.Sqrt((sources[i].x - channels[j].x) * (sources[i].x - channels[j].x) + (sources[i].y - channels[j].y) * (sources[i].y - channels[j].y));
 
 
-
+                        //  Если расстояние от середины источника до середины канала меньше радиуса источника, значит этот канал задейстован
+                        //  dz * Math.Tan(Math.PI/8) -- это поправка на расстояние между каналов и источником по оси Z (чем оно больше, тем рассеяние больше и тем больше каналов задействуется)
                         if (d < sources[i].radius + dz * Math.Tan(Math.PI/8))
                         {
+                            //  Считаем кол-во задейстованных каналов
                             channelsInSourceCount++;
-//                            intens = intens - 421 * d + 104;
 
-                            d_intens = 0;
-/*
-                            if (d < 0.05)
-                            {
-                                d_intens = 100;
-                            }
-                            else if ((d >= 0.05) && (d < 0.1))
-                            {
-                                d_intens = 100;
-                            }
-                            else if ((d >= 0.1) && (d < 0.15))
-                            {
-                                d_intens = 100;
-                            }
-                            else if ((d >= 0.15) && (d < 0.2))
-                            {
-                                d_intens = 100;
-                            }
-                            else if ((d >= 0.2) && (d < 0.25))
-                            {
-                                d_intens = 100;
-                            }
-                            else if ((d >= 0.25) && (d < 0.3))
-                            {
-                                d_intens = 100;
-                            }
-                            else if ((d >= 0.3) && (d < 0.35))
-                            {
-                                d_intens = 100;
-                            }
-                            else if ((d >= 0.35) && (d < 0.40))
-                            {
-                                d_intens = 100;
-                            }
-                            else if (d >= 0.40)
-                            {
-                                d_intens = 0;
-                            }
-
- */
-
+                            //  Зависимость интенсивности сигнала от удалённости канала от центра источника
+                            //  Вид - парабола с осями, направленными влево, с вершиной в (0.5; 0)
                             if (d <= 0.5)
                             {
                                 d_intens = Math.Sqrt(-200 * (d - 0.5));
@@ -372,40 +342,10 @@ namespace IMKSModel
                             {
                                 d_intens = 0;
                             }
-  
-/*
-                            d_zatyx = 1;
 
-                            if (dz < 0.05)
-                            {
-                                d_zatyx = 1;
-                            }
-                            else if ((dz >= 0.05) && (dz < 0.1))
-                            {
-                                d_zatyx = 0.9;
-                            }
-                            else if ((dz >= 0.1) && (dz < 0.15))
-                            {
-                                d_zatyx = 0.8;
-                            }
-                            else if ((dz >= 0.15) && (dz < 0.2))
-                            {
-                                d_zatyx = 0.7;
-                            }
-                            else if ((dz >= 0.2) && (dz < 0.25))
-                            {
-                                d_zatyx = 0.6;
-                            }
-                            else if ((dz >= 0.25) && (dz < 0.3))
-                            {
-                                d_zatyx = 0.5;
-                            }
-                            else if (dz >= 0.3)
-                            {
-                                d_zatyx = 0.4;
-                            }
-*/
 
+                            //  Зависимость коэфа затухания сигнала от удалённости канала от источника по оси Z
+                            //  Вид - парабола с осями, направленными влево, с вершиной в (0.6; 0)
                             if (dz <= 0.6)
                             {
                                 d_zatyx = Math.Sqrt(-1.66 * (dz - 0.6));
@@ -415,10 +355,12 @@ namespace IMKSModel
                                 d_zatyx = 0;
                             }
 
+
+                            //  Суммарная интенсивность всех каналов для текущего источника
                             intens = intens + d_intens * d_zatyx;
 
-//                            intens = intens + (18.42 * d * d - 8.60 * d + 1.08) * 100;
 
+                            //  Для наглядности рисуем канал
                             if (i == 0)
                             {
                                 System.Drawing.Pen myPen;
@@ -449,22 +391,42 @@ namespace IMKSModel
                             }
 
 
-/*
-                            //  Проверяем попадание в приёмник
+                            
+                            //  Проверяем попадание сигнала из текущего канала в какой-нибудь приёмник
+                            //  Для этого перебираем все приёмники
                             for (int k = 0; k < receiversCount; k++)
                             {
+
+                                //  Считаем расстояние от середины приёмника до середины канала
                                 d = Math.Sqrt((receivers[k].x - channels[j].x) * (receivers[k].x - channels[j].x) + (receivers[k].y - channels[j].y) * (receivers[k].y - channels[j].y));
 
+                                //  Если расстояние от середины приёмника до середины канала меньше внешнего и больше внутреннего радиусов приёмника, 
+                                //  значит этот канал задейстован
                                 if ((d < receivers[k].radius) && (d > receivers[k].innerRadius))
                                 {
+                                    //  Кол-во задействованных каналов
                                     channelsInReceiver++;
 
-                                    receiverIntens = receiverIntens + (18.42 * d * d - 8.60 * d + 1.08) * 100;
+
+                                    //  Зависимость интенсивности сигнала от удалённости канала от центра источника
+                                    //  Вид - парабола с осями, направленными влево, с вершиной в (0.5; 0)
+                                    if (d <= 0.5)
+                                    {
+                                        d_intens_rcv = Math.Sqrt(-200 * (d - 0.5));
+                                    }
+                                    else
+                                    {
+                                        d_intens_rcv = 0;
+                                    }
+
+
+                                    //  Суммарная интенсивность всех каналов на приёмнике для текущего источника
+                                    intens_rcv = intens_rcv + d_intens_rcv;
                                 }
 
 
                             }
-*/
+
 
                             
                         }
@@ -508,7 +470,7 @@ namespace IMKSModel
 
 
                     excelcells = excelcells_a1.get_Offset(ExcelRow, ExcelCol);
-                    excelcells.Value2 = Math.Round(intens).ToString();
+                    excelcells.Value2 = Math.Round(intens_rcv).ToString();
 
 
                     ExcelRow++;
@@ -565,7 +527,7 @@ namespace IMKSModel
         {
             Random rand = new Random();
 
-            int test = 1;
+            int test = 4;
 
             double breakPercent = 0.1;
             int channelToBreak;
@@ -718,6 +680,24 @@ namespace IMKSModel
 
             }
 
+
+
+            if (test == 5)
+            {
+
+                int k = 0;
+                double dz = 0;
+                for (int i = 0; i < 1000; i++)
+                {
+                    //  Делаем коммутацию, считаем уровень засветки и выводим в Ексель
+                    Commutation(0, dz, k);
+                    k++;
+                    dz = dz + 0.001;
+
+
+                }
+
+            }
 
 
 
