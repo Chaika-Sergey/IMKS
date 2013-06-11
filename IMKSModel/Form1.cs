@@ -292,6 +292,8 @@ namespace IMKSModel
                 intens_rcv = 0;
                 receiverIntens = 0;
                 
+                
+
 
                 //  Рисуем для наглядности первый источник
                 /*
