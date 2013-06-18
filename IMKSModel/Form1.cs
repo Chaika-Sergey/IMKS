@@ -48,14 +48,14 @@ namespace IMKSModel
             public double x, y;
             public double radius;
             public double innerRadius;
+            public double intens;
         }
 
-        public int receiversCount = 8;
-        public Receiver[] receivers = new Receiver[8];
+        public int receiversCount;
+        public Receiver[] receivers = new Receiver[5000];
 
 
 
-        int logicalCount;
             double busRadius = 1.5;         //  Радиус шины
 
 
@@ -79,6 +79,10 @@ namespace IMKSModel
         public Form1()
         {
             InitializeComponent();
+
+
+            double x, y, d, dx, dy, x0, y0;
+            int y_step;
 
 
 
@@ -152,58 +156,121 @@ namespace IMKSModel
             ///////////////////////////
             //////  Приёмники   ///////  
             ///////////////////////////
+            /*
+  
+                        //  Вариант один к одному для ВОСЬМИ приёмников 
 
+                        double receiverRadius = 0.23;
+                        double receiverInnerRadius = 0.13;
+                        receiversCount = 8;
 
+                        receivers[0].id = 0;
+                        receivers[0].x = 0.23;
+                        receivers[0].y = 1.97;
+                        receivers[0].radius = receiverRadius;
+                        receivers[0].innerRadius = receiverInnerRadius;
+
+                        receivers[1].id = 1;
+                        receivers[1].x = 1.08;
+                        receivers[1].y = 2.76;
+                        receivers[1].radius = receiverRadius;
+                        receivers[1].innerRadius = receiverInnerRadius;
+
+                        receivers[2].id = 2;
+                        receivers[2].x = 2.23;
+                        receivers[2].y = 2.62;
+                        receivers[2].radius = receiverRadius;
+                        receivers[2].innerRadius = receiverInnerRadius;
+
+                        receivers[3].id = 3;
+                        receivers[3].x = 2.82;
+                        receivers[3].y = 1.63;
+                        receivers[3].radius = receiverRadius;
+                        receivers[3].innerRadius = receiverInnerRadius;
+
+                        receivers[4].id = 4;
+                        receivers[4].x = 2.44;
+                        receivers[4].y = 0.54;
+                        receivers[4].radius = receiverRadius;
+                        receivers[4].innerRadius = receiverInnerRadius;
+
+                        receivers[5].id = 5;
+                        receivers[5].x = 1.31;
+                        receivers[5].y = 0.2;
+                        receivers[5].radius = receiverRadius;
+                        receivers[5].innerRadius = receiverInnerRadius;
+
+                        receivers[6].id = 6;
+                        receivers[6].x = 0.35;
+                        receivers[6].y = 0.81;
+                        receivers[6].radius = receiverRadius;
+                        receivers[6].innerRadius = receiverInnerRadius;
+
+                        receivers[7].id = 7;
+                        receivers[7].x = 1.49;
+                        receivers[7].y = 1.50;
+                        receivers[7].radius = receiverRadius;
+                        receivers[7].innerRadius = receiverInnerRadius;
+            */
+
+            //  Полтное гексагональное покрытие приёмниками
+
+            x0 = 1.5;                //  Центр шины - x
+            y0 = 1.5;                //  Центр шины - y
+            /*
+            dx = 0.46;             //  Шаг по x для гексагональной разметки
+            dy = 0.42;             //  Шаг по y для гексагональной разметки
             double receiverRadius = 0.23;
-            double receiverInnerRadius = 0.13;
+            double receiverInnerRadius = 0.0;
+            */
+            dx = 0.46;             //  Шаг по x для гексагональной разметки
+            dy = 0.42;             //  Шаг по y для гексагональной разметки
+            double receiverRadius = 0.20;
+            double receiverInnerRadius = 0.10;
 
-            receivers[0].id = 0;
-            receivers[0].x = 0.23;
-            receivers[0].y = 1.97;
-            receivers[0].radius = receiverRadius;
-            receivers[0].innerRadius = receiverInnerRadius;
 
-            receivers[1].id = 1;
-            receivers[1].x = 1.08;
-            receivers[1].y = 2.76;
-            receivers[1].radius = receiverRadius;
-            receivers[1].innerRadius = receiverInnerRadius;
+            y_step = 0;
+            y = 0;
+            receiversCount = 0;
+            while (y < busRadius * 2)
+            {
 
-            receivers[2].id = 2;
-            receivers[2].x = 2.23;
-            receivers[2].y = 2.62;
-            receivers[2].radius = receiverRadius;
-            receivers[2].innerRadius = receiverInnerRadius;
+                //  Для гексагональной разметки координаты по x на каждом уровне смещаем по-разному
+                if (y_step % 2 == 0)
+                {
+                    x = 0;
+                }
+                else
+                {
+                    x = dx / 2;
+                }
 
-            receivers[3].id = 3;
-            receivers[3].x = 2.82;
-            receivers[3].y = 1.63;
-            receivers[3].radius = receiverRadius;
-            receivers[3].innerRadius = receiverInnerRadius;
 
-            receivers[4].id = 4;
-            receivers[4].x = 2.44;
-            receivers[4].y = 0.54;
-            receivers[4].radius = receiverRadius;
-            receivers[4].innerRadius = receiverInnerRadius;
+                while (x < busRadius * 2)
+                {
+                    d = Math.Sqrt((x0 - x) * (x0 - x) + (y0 - y) * (y0 - y));
+                    if (d < busRadius)
+                    {
+                        //  Канал в шине (точка в круге)
 
-            receivers[5].id = 5;
-            receivers[5].x = 1.31;
-            receivers[5].y = 0.2;
-            receivers[5].radius = receiverRadius;
-            receivers[5].innerRadius = receiverInnerRadius;
+                        receivers[receiversCount].x = x;
+                        receivers[receiversCount].y = y;
+                        receivers[receiversCount].radius = receiverRadius;
+                        receivers[receiversCount].innerRadius = receiverInnerRadius;
 
-            receivers[6].id = 6;
-            receivers[6].x = 0.35;
-            receivers[6].y = 0.81;
-            receivers[6].radius = receiverRadius;
-            receivers[6].innerRadius = receiverInnerRadius;
+                        receiversCount++;
+                    }
 
-            receivers[7].id = 7;
-            receivers[7].x = 1.49;
-            receivers[7].y = 1.50;
-            receivers[7].radius = receiverRadius;
-            receivers[7].innerRadius = receiverInnerRadius;
+
+                    x = x + dx;
+                }
+
+                y = y + dy;
+                y_step++;
+            }
+
+
+
 
 
 
@@ -212,15 +279,14 @@ namespace IMKSModel
             //////  Каналы   ///////  
             ////////////////////////
 
-            double x, y, d;
-            double dx = 0.0429;             //  Шаг по x для гексагональной разметки
-            double dy = 0.0357;             //  Шаг по y для гексагональной разметки
-            double x0 = 1.5;                //  Центр шины - x
-            double y0 = 1.5;                //  Центр шины - y
+            dx = 0.0429;             //  Шаг по x для гексагональной разметки
+            dy = 0.0357;             //  Шаг по y для гексагональной разметки
+            x0 = 1.5;                //  Центр шины - x
+            y0 = 1.5;                //  Центр шины - y
             double channelRaduis = 0.021;    //  Радиус одного канала
 
 
-            int y_step = 0;
+            y_step = 0;
             y = 0;
             while (y < busRadius * 2)
             {
@@ -267,13 +333,14 @@ namespace IMKSModel
         }
 
 
-        private void Commutation(double breakPercent, double dz, int ExcelCol)
+        private int Commutation(double breakPercent, double dz, int ExcelCol)
         {
 
             double d, intens, d_intens, intens_rcv, d_intens_rcv, d_zatyx, receiverIntens;
             int channelsInSourceCount, channelsInReceiver;
+            int logicalCount = 0;
 
-            int drawK = 1000;
+            int drawK = 500;
 
             logicalCount = 0;
 
@@ -291,9 +358,13 @@ namespace IMKSModel
                 intens = 0;
                 intens_rcv = 0;
                 receiverIntens = 0;
-                
-                
 
+
+
+                for (int j = 0; j < receiversCount; j++ )
+                {
+                    receivers[j].intens = 0;
+                }
 
                 //  Рисуем для наглядности первый источник
                 /*
@@ -426,6 +497,29 @@ namespace IMKSModel
 
                                     //  Суммарная интенсивность всех каналов на приёмнике для текущего источника
                                     intens_rcv = intens_rcv + d_intens_rcv;
+
+                                    receivers[k].intens = receivers[k].intens + d_intens_rcv;
+
+
+
+                                    //  Рисуем для наглядности приёмники
+                                    
+                                    if (i == 5)
+                                    {
+                                        System.Drawing.Pen myPen;
+                                        myPen = new System.Drawing.Pen(System.Drawing.Color.Green, 5);
+
+                                        System.Drawing.Graphics formGraphics = this.CreateGraphics();
+                                        Rectangle rect = new Rectangle(Convert.ToInt32((receivers[k].x - receivers[k].radius) * drawK),
+                                                                        Convert.ToInt32((receivers[k].y - receivers[k].radius) * drawK),
+                                                                        Convert.ToInt32(receivers[k].radius * 2 * drawK),
+                                                                        Convert.ToInt32(receivers[k].radius * 2 * drawK));
+                                        formGraphics.DrawEllipse(myPen, rect);
+                                        myPen.Dispose();
+                                        formGraphics.Dispose();
+                                    }
+                                    
+
                                 }
 
 
@@ -445,14 +539,14 @@ namespace IMKSModel
                         {
 
 
-                            if (i == 0)
+                            if (i == 5)
                             {
                                 System.Drawing.Pen myPen;
                                 myPen = new System.Drawing.Pen(System.Drawing.Color.Red);
                                 System.Drawing.SolidBrush myBrush = new System.Drawing.SolidBrush(System.Drawing.Color.BlueViolet);
                                 System.Drawing.Graphics formGraphics = this.CreateGraphics();
                                 Rectangle rect = new Rectangle(Convert.ToInt32((channels[j].x - channels[j].radius) * drawK),
-                                                                Convert.ToInt32((channels[j].y - channels[j].radius) * drawK - 1750),
+                                                                Convert.ToInt32((channels[j].y - channels[j].radius) * drawK),
                                                                 Convert.ToInt32(channels[j].radius * 2 * drawK),
                                                                 Convert.ToInt32(channels[j].radius * 2 * drawK));
                                 formGraphics.FillEllipse(myBrush, rect);
@@ -473,8 +567,8 @@ namespace IMKSModel
 //                    label3.Text = label3.Text + channelsInReceiver.ToString() + "/" + Math.Round(receiverIntens).ToString() + "; ";
 
 
-                    excelcells = excelcells_a1.get_Offset(ExcelRow, ExcelCol);
-                    excelcells.Value2 = Math.Round(intens_rcv).ToString();
+//                    excelcells = excelcells_a1.get_Offset(ExcelRow, ExcelCol);
+//                    excelcells.Value2 = Math.Round(intens_rcv).ToString();
 
 
                     ExcelRow++;
@@ -484,6 +578,8 @@ namespace IMKSModel
 
             }
 
+
+            return logicalCount;
 
         }
 
@@ -531,7 +627,7 @@ namespace IMKSModel
         {
             Random rand = new Random();
 
-            int test = 5;
+            int test = 1;
 
             double breakPercent = 0.1;
             int channelToBreak;
