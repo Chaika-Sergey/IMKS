@@ -337,8 +337,9 @@ namespace IMKSModel
         {
 
             double d, intens, d_intens, intens_rcv, d_intens_rcv, d_zatyx, receiverIntens;
-            int channelsInSourceCount, channelsInReceiver;
+            int channelsInSourceCount, channelsInReceiver, receiversInLogical;
             int logicalCount = 0;
+            bool hasChannels;
 
             int drawK = 500;
 
@@ -349,235 +350,327 @@ namespace IMKSModel
 
             int ExcelRow = 1;
 
+            rtbLogChannels.Clear();
+            string curLogChannel;
 
-            //  Перебираем все источники
-            for (int i = 0; i < sourcesCount; i++)
+
+
+
+            for (int src_in_logChannel = 1; src_in_logChannel <= 7; src_in_logChannel++)
             {
-                channelsInSourceCount = 0;
-                channelsInReceiver = 0;
-                intens = 0;
-                intens_rcv = 0;
-                receiverIntens = 0;
 
+                int[] mass = new int[9];
+                int p;
+                string s = "";
 
-
-                for (int j = 0; j < receiversCount; j++ )
-                {
-                    receivers[j].intens = 0;
+                for (int t = 1; t <= src_in_logChannel; t++)  {
+                    mass[t] = t;
                 }
 
-                //  Рисуем для наглядности первый источник
-                /*
-                if (i == 0)
+                p = src_in_logChannel;
+                while (p >= 1)
                 {
-                    System.Drawing.Pen myPen;
-                    myPen = new System.Drawing.Pen(System.Drawing.Color.Blue, 5);
+                    s = "";
+                    for (int t = 1; t <= src_in_logChannel; t++)  {
+                        s = s + mass[t].ToString() + " ";
+                    }
+                    richTextBox1.AppendText(s + "\n");
 
-                    System.Drawing.Graphics formGraphics = this.CreateGraphics();
-                    Rectangle rect = new Rectangle(Convert.ToInt32((sources[i].x - sources[i].radius) * drawK),
-                                                    Convert.ToInt32((sources[i].y - sources[i].radius) * drawK - 1750),
-                                                    Convert.ToInt32(sources[i].radius * 2 * drawK),
-                                                    Convert.ToInt32(sources[i].radius * 2 * drawK));
-                    formGraphics.DrawEllipse(myPen, rect);
-                    myPen.Dispose();
-                    formGraphics.Dispose();
-                }
-                */
+                    hasChannels = false;
 
-
-
-                //  Для каждого источника перебираем все каналы
-                //  и ищем среди них задействованные этим источником
-                for (int j = 0; j < channelsCount; j++)
-                {
-
-                    //  Если канал не сломан
-                    if (channels[j].isOk)
+                    int i;
+                    int g = 0;
+                    while (g < s.Length)
                     {
-
-                        //  Считаем расстояние от середины источника до середины канала
-                        d = Math.Sqrt((sources[i].x - channels[j].x) * (sources[i].x - channels[j].x) + (sources[i].y - channels[j].y) * (sources[i].y - channels[j].y));
-
-
-                        //  Если расстояние от середины источника до середины канала меньше радиуса источника, значит этот канал задейстован
-                        //  dz * Math.Tan(Math.PI/8) -- это поправка на расстояние между каналов и источником по оси Z (чем оно больше, тем рассеяние больше и тем больше каналов задействуется)
-                        if (d < sources[i].radius + dz * Math.Tan(Math.PI/8))
+                        if (s[g] == ' ')
                         {
-                            //  Считаем кол-во задейстованных каналов
-                            channelsInSourceCount++;
+                            //
+                        }
+                        else
+                        {
+                            i = Convert.ToInt32(s[g].ToString()) - 1;
 
-                            //  Зависимость интенсивности сигнала от удалённости канала от центра источника
-                            //  Вид - парабола с осями, направленными влево, с вершиной в (0.5; 0)
-                            if (d <= 0.5)
-                            {
-                                d_intens = Math.Sqrt(-200 * (d - 0.5));
-                            }
-                            else
-                            {
-                                d_intens = 0;
-                            }
+                            curLogChannel = i.ToString() + " - ";
+
+                            receiversInLogical = 0;
+                            channelsInSourceCount = 0;
+                            channelsInReceiver = 0;
+                            intens = 0;
+                            intens_rcv = 0;
+                            receiverIntens = 0;
 
 
-                            //  Зависимость коэфа затухания сигнала от удалённости канала от источника по оси Z
-                            //  Вид - парабола с осями, направленными влево, с вершиной в (0.6; 0)
-                            if (dz <= 0.6)
+
+                            for (int j = 0; j < receiversCount; j++)
                             {
-                                d_zatyx = Math.Sqrt(-1.66 * (dz - 0.6));
-                            }
-                            else
-                            {
-                                d_zatyx = 0;
+                                receivers[j].intens = 0;
                             }
 
-
-                            //  Суммарная интенсивность всех каналов для текущего источника
-                            intens = intens + d_intens * d_zatyx;
-
-
-                            //  Для наглядности рисуем канал
+                            //  Рисуем для наглядности первый источник
                             /*
                             if (i == 0)
                             {
                                 System.Drawing.Pen myPen;
-                                myPen = new System.Drawing.Pen(System.Drawing.Color.FromArgb(255, 0, 0));
-
-                                System.Drawing.Color color = new System.Drawing.Color();
-
-                                if (d_intens != 0)
-                                {
-                                    color = System.Drawing.Color.FromArgb(Convert.ToInt16(2.55 * d_intens), 0, 0);
-                                }
-                                else
-                                {
-                                    color = System.Drawing.Color.FromArgb(0, 255, 0);
-                                }
-
-                                System.Drawing.SolidBrush myBrush = new System.Drawing.SolidBrush(color);
-
+                                myPen = new System.Drawing.Pen(System.Drawing.Color.Blue, 5);
 
                                 System.Drawing.Graphics formGraphics = this.CreateGraphics();
-                                Rectangle rect = new Rectangle( Convert.ToInt32((channels[j].x - channels[j].radius) * drawK),
-                                                                Convert.ToInt32((channels[j].y - channels[j].radius) * drawK - 1750),
-                                                                Convert.ToInt32(channels[j].radius * 2 * drawK),
-                                                                Convert.ToInt32(channels[j].radius * 2 * drawK));
-                                formGraphics.FillEllipse(myBrush, rect);
+                                Rectangle rect = new Rectangle(Convert.ToInt32((sources[i].x - sources[i].radius) * drawK),
+                                                                Convert.ToInt32((sources[i].y - sources[i].radius) * drawK - 1750),
+                                                                Convert.ToInt32(sources[i].radius * 2 * drawK),
+                                                                Convert.ToInt32(sources[i].radius * 2 * drawK));
+                                formGraphics.DrawEllipse(myPen, rect);
                                 myPen.Dispose();
                                 formGraphics.Dispose();
                             }
                             */
 
-                            
-                            //  Проверяем попадание сигнала из текущего канала в какой-нибудь приёмник
-                            //  Для этого перебираем все приёмники
-                            for (int k = 0; k < receiversCount; k++)
+
+
+                            //  Для каждого источника перебираем все каналы
+                            //  и ищем среди них задействованные этим источником
+                            for (int j = 0; j < channelsCount; j++)
                             {
 
-                                //  Считаем расстояние от середины приёмника до середины канала
-                                d = Math.Sqrt((receivers[k].x - channels[j].x) * (receivers[k].x - channels[j].x) + (receivers[k].y - channels[j].y) * (receivers[k].y - channels[j].y));
-
-                                //  Если расстояние от середины приёмника до середины канала меньше внешнего и больше внутреннего радиусов приёмника, 
-                                //  значит этот канал задейстован
-                                if ((d < receivers[k].radius) && (d > receivers[k].innerRadius))
+                                //  Если канал не сломан
+                                if (channels[j].isOk)
                                 {
-                                    //  Кол-во задействованных каналов
-                                    channelsInReceiver++;
+
+                                    //  Считаем расстояние от середины источника до середины канала
+                                    d = Math.Sqrt((sources[i].x - channels[j].x) * (sources[i].x - channels[j].x) + (sources[i].y - channels[j].y) * (sources[i].y - channels[j].y));
 
 
-                                    //  Зависимость интенсивности сигнала от удалённости канала от центра источника
-                                    //  Вид - парабола с осями, направленными влево, с вершиной в (0.5; 0)
-                                    if (d <= 0.5)
+                                    //  Если расстояние от середины источника до середины канала меньше радиуса источника, значит этот канал задейстован
+                                    //  dz * Math.Tan(Math.PI/8) -- это поправка на расстояние между каналов и источником по оси Z (чем оно больше, тем рассеяние больше и тем больше каналов задействуется)
+                                    if (d < sources[i].radius + dz * Math.Tan(Math.PI / 8))
                                     {
-                                        d_intens_rcv = Math.Sqrt(-200 * (d - 0.5));
+                                        //  Считаем кол-во задейстованных каналов
+                                        channelsInSourceCount++;
+
+                                        //  Зависимость интенсивности сигнала от удалённости канала от центра источника
+                                        //  Вид - парабола с осями, направленными влево, с вершиной в (0.5; 0)
+                                        if (d <= 0.5)
+                                        {
+                                            d_intens = Math.Sqrt(-200 * (d - 0.5));
+                                        }
+                                        else
+                                        {
+                                            d_intens = 0;
+                                        }
+
+
+                                        //  Зависимость коэфа затухания сигнала от удалённости канала от источника по оси Z
+                                        //  Вид - парабола с осями, направленными влево, с вершиной в (0.6; 0)
+                                        if (dz <= 0.6)
+                                        {
+                                            d_zatyx = Math.Sqrt(-1.66 * (dz - 0.6));
+                                        }
+                                        else
+                                        {
+                                            d_zatyx = 0;
+                                        }
+
+
+                                        //  Суммарная интенсивность всех каналов для текущего источника
+                                        intens = intens + d_intens * d_zatyx;
+
+
+                                        //  Для наглядности рисуем канал
+                                        /*
+                                        if (i == 0)
+                                        {
+                                            System.Drawing.Pen myPen;
+                                            myPen = new System.Drawing.Pen(System.Drawing.Color.FromArgb(255, 0, 0));
+
+                                            System.Drawing.Color color = new System.Drawing.Color();
+
+                                            if (d_intens != 0)
+                                            {
+                                                color = System.Drawing.Color.FromArgb(Convert.ToInt16(2.55 * d_intens), 0, 0);
+                                            }
+                                            else
+                                            {
+                                                color = System.Drawing.Color.FromArgb(0, 255, 0);
+                                            }
+
+                                            System.Drawing.SolidBrush myBrush = new System.Drawing.SolidBrush(color);
+
+
+                                            System.Drawing.Graphics formGraphics = this.CreateGraphics();
+                                            Rectangle rect = new Rectangle( Convert.ToInt32((channels[j].x - channels[j].radius) * drawK),
+                                                                            Convert.ToInt32((channels[j].y - channels[j].radius) * drawK - 1750),
+                                                                            Convert.ToInt32(channels[j].radius * 2 * drawK),
+                                                                            Convert.ToInt32(channels[j].radius * 2 * drawK));
+                                            formGraphics.FillEllipse(myBrush, rect);
+                                            myPen.Dispose();
+                                            formGraphics.Dispose();
+                                        }
+                                        */
+
+
+                                        //  Проверяем попадание сигнала из текущего канала в какой-нибудь приёмник
+                                        //  Для этого перебираем все приёмники
+                                        for (int k = 0; k < receiversCount; k++)
+                                        {
+
+                                            //  Считаем расстояние от середины приёмника до середины канала
+                                            d = Math.Sqrt((receivers[k].x - channels[j].x) * (receivers[k].x - channels[j].x) + (receivers[k].y - channels[j].y) * (receivers[k].y - channels[j].y));
+
+                                            //  Если расстояние от середины приёмника до середины канала меньше внешнего и больше внутреннего радиусов приёмника, 
+                                            //  значит этот канал задейстован
+                                            if ((d < receivers[k].radius) && (d > receivers[k].innerRadius))
+                                            {
+                                                //  Кол-во задействованных каналов
+                                                channelsInReceiver++;
+
+
+                                                //  Зависимость интенсивности сигнала от удалённости канала от центра источника
+                                                //  Вид - парабола с осями, направленными влево, с вершиной в (0.5; 0)
+                                                if (d <= 0.5)
+                                                {
+                                                    d_intens_rcv = Math.Sqrt(-200 * (d - 0.5));
+                                                }
+                                                else
+                                                {
+                                                    d_intens_rcv = 0;
+                                                }
+
+
+                                                //  Суммарная интенсивность всех каналов на приёмнике для текущего источника
+                                                intens_rcv = intens_rcv + d_intens_rcv;
+
+                                                receivers[k].intens = receivers[k].intens + d_intens_rcv;
+
+
+
+                                                //  Рисуем для наглядности приёмники
+
+                                                if (i == 5)
+                                                {
+                                                    System.Drawing.Pen myPen;
+                                                    myPen = new System.Drawing.Pen(System.Drawing.Color.Green, 5);
+
+                                                    System.Drawing.Graphics formGraphics = this.CreateGraphics();
+                                                    Rectangle rect = new Rectangle(Convert.ToInt32((receivers[k].x - receivers[k].radius) * drawK),
+                                                                                    Convert.ToInt32((receivers[k].y - receivers[k].radius) * drawK),
+                                                                                    Convert.ToInt32(receivers[k].radius * 2 * drawK),
+                                                                                    Convert.ToInt32(receivers[k].radius * 2 * drawK));
+                                                    formGraphics.DrawEllipse(myPen, rect);
+                                                    myPen.Dispose();
+                                                    formGraphics.Dispose();
+                                                }
+
+
+                                            }
+
+
+                                        }
+
+
+
                                     }
-                                    else
+                                }
+
+                                else
+                                {
+
+                                    d = Math.Sqrt((sources[i].x - channels[j].x) * (sources[i].x - channels[j].x) + (sources[i].y - channels[j].y) * (sources[i].y - channels[j].y));
+
+                                    if (d < sources[i].radius)
                                     {
-                                        d_intens_rcv = 0;
+
+
+                                        if (i == 5)
+                                        {
+                                            System.Drawing.Pen myPen;
+                                            myPen = new System.Drawing.Pen(System.Drawing.Color.Red);
+                                            System.Drawing.SolidBrush myBrush = new System.Drawing.SolidBrush(System.Drawing.Color.BlueViolet);
+                                            System.Drawing.Graphics formGraphics = this.CreateGraphics();
+                                            Rectangle rect = new Rectangle(Convert.ToInt32((channels[j].x - channels[j].radius) * drawK),
+                                                                            Convert.ToInt32((channels[j].y - channels[j].radius) * drawK),
+                                                                            Convert.ToInt32(channels[j].radius * 2 * drawK),
+                                                                            Convert.ToInt32(channels[j].radius * 2 * drawK));
+                                            formGraphics.FillEllipse(myBrush, rect);
+                                            myPen.Dispose();
+                                            formGraphics.Dispose();
+                                        }
                                     }
-
-
-                                    //  Суммарная интенсивность всех каналов на приёмнике для текущего источника
-                                    intens_rcv = intens_rcv + d_intens_rcv;
-
-                                    receivers[k].intens = receivers[k].intens + d_intens_rcv;
-
-
-
-                                    //  Рисуем для наглядности приёмники
-                                    
-                                    if (i == 5)
-                                    {
-                                        System.Drawing.Pen myPen;
-                                        myPen = new System.Drawing.Pen(System.Drawing.Color.Green, 5);
-
-                                        System.Drawing.Graphics formGraphics = this.CreateGraphics();
-                                        Rectangle rect = new Rectangle(Convert.ToInt32((receivers[k].x - receivers[k].radius) * drawK),
-                                                                        Convert.ToInt32((receivers[k].y - receivers[k].radius) * drawK),
-                                                                        Convert.ToInt32(receivers[k].radius * 2 * drawK),
-                                                                        Convert.ToInt32(receivers[k].radius * 2 * drawK));
-                                        formGraphics.DrawEllipse(myPen, rect);
-                                        myPen.Dispose();
-                                        formGraphics.Dispose();
-                                    }
-                                    
-
                                 }
 
 
                             }
 
+                            if (channelsInSourceCount > 0)
+                            {
+                                receiversInLogical = 0;
 
-                            
+                                for (int j = 0; j < receiversCount; j++)
+                                {
+                                    if (receivers[j].intens >= 100)
+                                    {
+                                        curLogChannel = curLogChannel + j.ToString() + " (" + receivers[j].intens.ToString("0.00") + "); ";
+                                        receiversInLogical++;
+                                    }
+                                }
+                                rtbLogChannels.AppendText(curLogChannel + "\n");
+                                Refresh();
+
+
+                                if (receiversInLogical != 0)
+                                {
+                                    hasChannels = true;
+                                }
+
+
+                                //                    label2.Text = label2.Text + channelsInSourceCount.ToString() + "/" + Math.Round(intens).ToString() + "; ";
+                                //                    label3.Text = label3.Text + channelsInReceiver.ToString() + "/" + Math.Round(receiverIntens).ToString() + "; ";
+
+
+                                //                    excelcells = excelcells_a1.get_Offset(ExcelRow, ExcelCol);
+                                //                    excelcells.Value2 = Math.Round(intens_rcv).ToString();
+
+                                //                    excelcells = excelcells_a1.get_Offset(0, ExcelCol);
+                                //                    excelcells.Value2 = receiversInLogical.ToString();
+
+                                //                    ExcelRow++;
+                            }
+
                         }
+
+
+
+                        g++;
                     }
 
+
+                    if (hasChannels)
+                    {
+                        logicalCount++;
+                    }
+
+
+
+
+
+                    if (mass[src_in_logChannel] == sourcesCount)
+                    {
+                        p--;
+                    }
                     else
                     {
-
-                        d = Math.Sqrt((sources[i].x - channels[j].x) * (sources[i].x - channels[j].x) + (sources[i].y - channels[j].y) * (sources[i].y - channels[j].y));
-
-                        if (d < sources[i].radius)
-                        {
-
-
-                            if (i == 5)
-                            {
-                                System.Drawing.Pen myPen;
-                                myPen = new System.Drawing.Pen(System.Drawing.Color.Red);
-                                System.Drawing.SolidBrush myBrush = new System.Drawing.SolidBrush(System.Drawing.Color.BlueViolet);
-                                System.Drawing.Graphics formGraphics = this.CreateGraphics();
-                                Rectangle rect = new Rectangle(Convert.ToInt32((channels[j].x - channels[j].radius) * drawK),
-                                                                Convert.ToInt32((channels[j].y - channels[j].radius) * drawK),
-                                                                Convert.ToInt32(channels[j].radius * 2 * drawK),
-                                                                Convert.ToInt32(channels[j].radius * 2 * drawK));
-                                formGraphics.FillEllipse(myBrush, rect);
-                                myPen.Dispose();
-                                formGraphics.Dispose();
-                            }
-                        }
+                        p = src_in_logChannel;
                     }
 
-
+                    if (p >= 1)
+                    {
+                        for (int j = src_in_logChannel; j >= p; j--)
+                        {
+                            mass[j] = mass[p] + j - p + 1;
+                        }
+                    }
                 }
-
-                if (channelsInSourceCount > 0)
-                {
-                    logicalCount++;
-
-//                    label2.Text = label2.Text + channelsInSourceCount.ToString() + "/" + Math.Round(intens).ToString() + "; ";
-//                    label3.Text = label3.Text + channelsInReceiver.ToString() + "/" + Math.Round(receiverIntens).ToString() + "; ";
-
-
-//                    excelcells = excelcells_a1.get_Offset(ExcelRow, ExcelCol);
-//                    excelcells.Value2 = Math.Round(intens_rcv).ToString();
-
-
-                    ExcelRow++;
-                }
-
 
 
             }
-
 
             return logicalCount;
 
@@ -629,6 +722,8 @@ namespace IMKSModel
 
             int test = 1;
 
+            int logicalCount;
+
             double breakPercent = 0.1;
             int channelToBreak;
             int breakCount = Convert.ToInt32(Math.Round(channelsCount * breakPercent));
@@ -646,7 +741,11 @@ namespace IMKSModel
                 while (commonBreakPercent < 90)
                 {
                     //  Делаем коммутацию, считаем уровень засветки и выводим в Ексель
-                    Commutation(commonBreakPercent, 0, k);
+                    logicalCount = Commutation(commonBreakPercent, 0, k);
+
+                    excelcells = excelcells_a1.get_Offset(0, k);
+                    excelcells.Value2 = logicalCount.ToString();
+
 
                     //  Считаем сколько каналов нужно убрать на следующем шаге
                     breakCount = Convert.ToInt32(Math.Round(channelsCount * breakPercent));
@@ -842,6 +941,72 @@ namespace IMKSModel
 
 
             label1.Text = "Выбыло " + breakCount.ToString() + " из " + channelsCount.ToString() + " (" + Convert.ToInt32(Math.Round( Convert.ToDouble(breakCount)/channelsCount * 100)).ToString() + ")";
+        }
+
+        private void button3_Click(object sender, EventArgs e)
+        {
+
+            /*
+              for i := 1 to k do
+                A[i] := i; //Первое подмножество
+              p := k;
+              while p >= 1 do
+              begin
+                writeln(A[1],..., A[k]); //вывод очередного сочетания
+                if A[k] = n then
+                  p := p - 1
+                else
+                  p := k;
+                if p >= 1 then
+                  for i := k downto p do
+                    A[i] := A[p] + i - p + 1;
+              end;
+            */
+
+
+            int[] mass = new int[9];
+            int n = 8;
+            int k = 2;
+            int p;
+            string s = "";
+
+            for (int i = 1; i <= k; i++)
+            {
+                mass[i] = i;
+            }
+
+            p = k;
+            while (p >= 1)
+            {
+                s = "";
+                for (int i = 1; i <= k; i++)
+                {
+                    s = s + mass[i].ToString() + " ";
+                }
+                richTextBox1.AppendText(s + "\n");
+
+                if (mass[k] == n)
+                {
+                    p--;
+                }
+                else
+                {
+                    p = k;
+                }
+
+                if (p >= 1)
+                {
+                    for (int i = k; i >= p; i--)
+                    {
+                        mass[i] = mass[p] + i - p + 1;
+                    }
+                }
+            }
+
+
+
+
+
         }
     }
 }
